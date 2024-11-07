@@ -1,0 +1,195 @@
+// liquor-match.js
+
+class LiquorMatch {
+  constructor(containerId) {
+    this.container = document.getElementById(containerId);
+    this.products = [
+      {
+        id: 1,
+        name: "Highland Reserve",
+        type: "Whiskey",
+        rating: 4.5,
+        flavors: ["Smokey", "Vanilla", "Woody"],
+        image: "https://place-hold.it/300x300?text=Highland%20Reserve",
+      },
+      {
+        id: 2,
+        name: "Crystal Gin",
+        type: "Gin",
+        rating: 4.8,
+        flavors: ["Citrus", "Floral", "Herbal"],
+        image: "https://place-hold.it/300x300?text=Crystal%20Gin",
+      },
+      {
+        id: 3,
+        name: "Golden Rum",
+        type: "Rum",
+        rating: 4.3,
+        flavors: ["Sweet", "Spice", "Vanilla"],
+        image: "https://place-hold.it/300x300?text=Golden%20Rum",
+      },
+      {
+        id: 4,
+        name: "Tres Vieilles",
+        type: "Cognac",
+        rating: 4.5,
+        flavors: ["Vanilla", "Woody", "Sweet"],
+        image: "https://place-hold.it/300x300?text=Tres%20Vieilles",
+      },
+    ];
+    this.flavorProfiles = [
+      "Citrus", "Vanilla", "Spice", "Sweet", "Smokey", "Woody", "Floral", "Herbal"
+    ];
+    this.liquorTypes = [
+      "Whiskey", "Gin", "Rum", "Tequila", "Vodka", "Cognac", "Liqueur"
+    ];
+    this.selectedFlavors = [];
+    this.render();
+    this.addEventListeners();
+  }
+
+  render() {
+    this.container.innerHTML = `
+      <div class="liquor-match">
+        <header class="lm-header">
+          <h1>Liquor Match</h1>
+          <div class="lm-search">
+            <input type="text" id="lm-search-input" placeholder="Search spirits...">
+          </div>
+        </header>
+        <main class="lm-main">
+          <div class="lm-filters">
+            <button id="lm-flavor-btn">Flavor Profile</button>
+            <button id="lm-type-btn">Spirit Type</button>
+          </div>
+          <div id="lm-product-grid" class="lm-product-grid"></div>
+        </main>
+      </div>
+    `;
+    this.renderProducts();
+  }
+
+  renderProducts() {
+    const grid = document.getElementById('lm-product-grid');
+    grid.innerHTML = this.products.map(product => `
+      <div class="lm-product-card">
+        <img src="${product.image}" alt="${product.name}" class="lm-product-image">
+        <div class="lm-product-info">
+          <h3>${product.name}</h3>
+          <p>${product.type}</p>
+          <div class="lm-product-rating">★ ${product.rating}</div>
+          <div class="lm-product-flavors">
+            ${product.flavors.map(flavor => `<span class="lm-flavor-badge">${flavor}</span>`).join('')}
+          </div>
+          <button class="lm-details-btn">Details</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  addEventListeners() {
+    const searchInput = document.getElementById('lm-search-input');
+    searchInput.addEventListener('input', (e) => this.handleSearch(e.target.value));
+
+    const flavorBtn = document.getElementById('lm-flavor-btn');
+    flavorBtn.addEventListener('click', () => this.showFlavorModal());
+
+    const typeBtn = document.getElementById('lm-type-btn');
+    typeBtn.addEventListener('click', () => this.showTypeModal());
+  }
+
+  handleSearch(query) {
+    const filteredProducts = this.products.filter(product => 
+      product.name.toLowerCase().includes(query.toLowerCase()) ||
+      product.type.toLowerCase().includes(query.toLowerCase())
+    );
+    this.renderFilteredProducts(filteredProducts);
+  }
+
+  showFlavorModal() {
+    const modal = document.createElement('div');
+    modal.className = 'lm-modal';
+    modal.innerHTML = `
+      <div class="lm-modal-content">
+        <h2>Select Flavor Profiles</h2>
+        ${this.flavorProfiles.map(flavor => `
+          <label>
+            <input type="checkbox" value="${flavor}" ${this.selectedFlavors.includes(flavor) ? 'checked' : ''}>
+            ${flavor}
+          </label>
+        `).join('')}
+        <button id="lm-apply-flavors">Apply</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const applyBtn = document.getElementById('lm-apply-flavors');
+    applyBtn.addEventListener('click', () => {
+      this.selectedFlavors = Array.from(modal.querySelectorAll('input:checked')).map(input => input.value);
+      this.filterProducts();
+      document.body.removeChild(modal);
+    });
+  }
+
+  showTypeModal() {
+    const modal = document.createElement('div');
+    modal.className = 'lm-modal';
+    modal.innerHTML = `
+      <div class="lm-modal-content">
+        <h2>Select Spirit Type</h2>
+        ${this.liquorTypes.map(type => `
+          <button class="lm-type-btn">${type}</button>
+        `).join('')}
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    modal.querySelectorAll('.lm-type-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.filterProductsByType(btn.textContent);
+        document.body.removeChild(modal);
+      });
+    });
+  }
+
+  filterProducts() {
+    if (this.selectedFlavors.length === 0) {
+      this.renderProducts();
+      return;
+    }
+    const filteredProducts = this.products.filter(product => 
+      this.selectedFlavors.some(flavor => product.flavors.includes(flavor))
+    );
+    this.renderFilteredProducts(filteredProducts);
+  }
+
+  filterProductsByType(type) {
+    const filteredProducts = this.products.filter(product => product.type === type);
+    this.renderFilteredProducts(filteredProducts);
+  }
+
+  renderFilteredProducts(products) {
+    const grid = document.getElementById('lm-product-grid');
+    grid.innerHTML = products.map(product => `
+      <div class="lm-product-card">
+        <img src="${product.image}" alt="${product.name}" class="lm-product-image">
+        <div class="lm-product-info">
+          <h3>${product.name}</h3>
+          <p>${product.type}</p>
+          <div class="lm-product-rating">★ ${product.rating}</div>
+          <div class="lm-product-flavors">
+            ${product.flavors.map(flavor => `<span class="lm-flavor-badge">${flavor}</span>`).join('')}
+          </div>
+          <button class="lm-details-btn">Details</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// Usage
+document.addEventListener('DOMContentLoaded', () => {
+  new LiquorMatch('liquor-match-container');
+});
+
+console.log("Liquor Match package created successfully!");
